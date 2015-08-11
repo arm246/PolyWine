@@ -58,7 +58,6 @@ void draw()
    if (selected){
       filterSimColor(colorTolerance);
       trackBlobs();
-      trackBlobs(0);
       image(kinect.rgbImage(), 0, 0);
       drawBlobs();
    }
@@ -149,5 +148,8 @@ void getDepth(int o)
 
 void keyPressed()
 {
-  if (key == 'd') getDepth();
+  if (key == 'd') {
+    getDepth();
+    getDepth(0);
+  }
 }
