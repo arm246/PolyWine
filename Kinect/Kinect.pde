@@ -25,7 +25,7 @@ PImage img;
 
 void setup()
 {
-   size(640, 480);
+   size(640, 480, P3D);
    noStroke();
    colorMode(RGB, 255);
    
@@ -54,11 +54,11 @@ void draw()
 {
    kinect.update();
    depthMap = kinect.depthMap();
-   realWorldMap = kinect.depthMapRealWorld();
    image(kinect.rgbImage(), 0, 0);
    if (selected){
       filterSimColor(colorTolerance);
       trackBlobs();
+      trackBlobs(0);
       image(kinect.rgbImage(), 0, 0);
       drawBlobs();
    }
@@ -126,10 +126,23 @@ void getDepth()
   for(int i = 0; i < bd.getBlobsNumber(); i++)
   {
     if (bd.getBlobWeight(i) > size) {
+      realWorldMap = kinect.depthMapRealWorld();
       int index = (int) (bd.getCentroidX(i) + (bd.getCentroidY(i) * width));
-      int depth = depthMap[index];
       PVector realWorldPoint = realWorldMap[index];
       println("Blob " + i + ": " + realWorldPoint);
+    }
+  }
+}
+
+void getDepth(int o)
+{
+  for(int i = 0; i < bd.getBlobsNumber(); i++)
+  {
+    if (bd.getBlobWeight(i) > size) {
+      PImage depthImage = kinect.depthImage();
+      int index = (int) (bd.getCentroidX(i) + (bd.getCentroidY(i) * width));
+      int depth = (int) map(depthImage.pixels[index], 0, 255, 800, 4000);
+      println("Blob " + i + " depth: " + depth + "mm");
     }
   }
 }
