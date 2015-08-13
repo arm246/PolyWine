@@ -35,7 +35,7 @@ void drawBlobs()
 {
   for(int i = 0; i < bd.getBlobsNumber(); i++)
   {
-    if (bd.getBlobWeight(i) > size) {
+    if (bd.getBlobWeight(i) > minimumSize) {
       ellipse(bd.getCentroidX(i), bd.getCentroidY(i), 10, 10);
       bd.drawBlobContour(i,color(255, 0, 0),2);
     }
@@ -46,7 +46,7 @@ void getDepth()
 {
   for(int i = 0; i < bd.getBlobsNumber(); i++)
   {
-    if (bd.getBlobWeight(i) > size) {
+    if (bd.getBlobWeight(i) > minimumSize) {
       realWorldMap = kinect.depthMapRealWorld();
       int index = (int) (bd.getCentroidX(i) + (bd.getCentroidY(i) * width));
       PVector realWorldPoint = realWorldMap[index];
@@ -59,7 +59,7 @@ void getDepth(int o)
 {
   for(int i = 0; i < bd.getBlobsNumber(); i++)
   {
-    if (bd.getBlobWeight(i) > size) {
+    if (bd.getBlobWeight(i) > minimumSize) {
       PImage depthImage = kinect.depthImage();
       int index = (int) (bd.getCentroidX(i) + (bd.getCentroidY(i) * width));
       int depth = (int) map(depthImage.pixels[index], 0, 255, 800, 4000);
@@ -77,6 +77,16 @@ void keyPressed()
 }
 
 void scan() {
+  //add new Blob centers from this frame to the glasses buffer
   trackBlobs();
-  for(int i = 0; i < bd.getBlobsNumber(); i++) {
+  ProximityGroup.fill(glassesBuffer, bd, minimumSize);
+}
+
+PVector[] getPath() {
+  //glasses buffer is full; construct groups and get their pour path
+  ProximityGroup.empty(allGlasses, glassesBuffer);
+  return ProximityGroup.getPourPath(allGlasses, kinect);
+}
+
+    
     

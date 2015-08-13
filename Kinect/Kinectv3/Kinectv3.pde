@@ -20,10 +20,11 @@ int colorTolerance;
 int sliderValue = 100;
 int sliderTicks1 = 100;
 int sliderTicks2 = 30;
-int size;
+int minimumSize;
 
 PImage img;
-ArrayList<ProxGroup> allGlasses;
+ArrayList<ProximityGroup> allGlasses;
+ArrayList<PVector> glassesBuffer;
 
 void setup()
 {
@@ -46,10 +47,13 @@ void setup()
    .setPosition(70,8)
    .setRange(0,500)
    ;  
-    cp5.addSlider("size")
+    cp5.addSlider("minimumSize")
    .setPosition(70,20)
    .setRange(0,500)
-   ;    
+   ; 
+  
+   allGlasses = new ArrayList();
+   glassesBuffer = new ArrayList(100);  
 }
 
 void draw()

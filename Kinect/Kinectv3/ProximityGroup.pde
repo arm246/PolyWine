@@ -1,17 +1,16 @@
-class ProximityGroup {
+static class ProximityGroup {
   
-  public static int tolerance = 10;
+  private static int tolerance = 10;
   public PVector center;
   public int depth;
   public int size = 0;
-  public Arraylist<PVector> componentPoints;
-  public static Arraylist<PVector> candidatePoints;
+  public ArrayList<PVector> componentPoints;
   
   public ProximityGroup(PVector initCenter) {
     this.center.x = initCenter.x;
     this.center.y = initCenter.y;
     this.size = this.size+1;
-    this.componentPoints = new Arraylist();
+    this.componentPoints = new ArrayList();
     this.componentPoints.add(initCenter);
   }
   
@@ -26,21 +25,23 @@ class ProximityGroup {
     else return false;
   }
   
-  public static void fill() {
+  public static void fill(ArrayList<PVector> candidatePoints, Detector bd, int blobSize) {
     for(int i = 0; i < bd.getBlobsNumber(); i++)  {
-      if (bd.getBlobWeight(i) > size) {
+      if (bd.getBlobWeight(i) > blobSize) {
         candidatePoints.add(new PVector(bd.getCentroidX(i), bd.getCentroidY(i)));
       }
     }
   }
   
-  public static void empty(ArrayList<ProxGroup> allGroups) {
+  public static void empty(ArrayList<ProximityGroup> allGroups, 
+                           ArrayList<PVector> candidatePoints) {
     for (PVector candidate: candidatePoints) {
       if (allGroups.size()>0) {
-        Iterator iterator = allGroups.iterator()
+        Iterator iterator = allGroups.iterator();
         Boolean addNew = true;
         while(iterator.hasNext()) {
-          addNew = addNew && !iterator.next.addPoint(candidate);
+          ProximityGroup thisGroup = (ProximityGroup)iterator.next();
+          addNew = addNew && !(thisGroup.addPoint(candidate));
         }
         if (addNew) allGroups.add(new ProximityGroup(candidate));
       }
@@ -49,13 +50,16 @@ class ProximityGroup {
     candidatePoints.clear();
   }
   
-  public static PVector[] getPourPath(ArrayList<ProxGroup> allGroups) {
+  public static PVector[] getPourPath(ArrayList<ProximityGroup> allGroups, SimpleOpenNI kinect) {
+    cullGroups(allGroups);
     int pathSize = allGroups.size();
     PVector[] pourPath = new PVector[pathSize];
     int pathIndex = 0;
+    PVector[] realWorldMap = kinect.depthMapRealWorld();
     Iterator iterator = allGroups.iterator();
     while (iterator.hasNext())  {
-      PVector point = iterator.next();
+      ProximityGroup thisGroup = (ProximityGroup) iterator.next();
+      PVector point = thisGroup.center;
       int index = (int) (point.x + (point.y * kinect.depthWidth()));
       PVector realWorldPoint = realWorldMap[index];
       pourPath[pathIndex] = realWorldPoint;
@@ -74,14 +78,14 @@ class ProximityGroup {
     swapIndices(pourPath, 0, startIndex);
     //reorder into minimal distance traversal
     for (int i = 0; i < pathSize-1; i++) {
-      int closestPtIndex = i;
+      int closestPtIndex = i+1;
       int distance = Integer.MAX_VALUE;
-      for (int j = i+1; j < pathSize; j++) {
+      for (int j = closestPtIndex; j < pathSize; j++) {
         if (PVector.dist(pourPath[i], pourPath[j])<distance) {
           closestPtIndex = j;
         }
       }
-      if (j != i+1) swapIndices(pourPath, i+1, j);
+      if (closestPtIndex != i+1) swapIndices(pourPath, i+1, closestPtIndex);
     }
   }
    
@@ -90,6 +94,15 @@ class ProximityGroup {
     pourPath[index1] = pourPath[index2];
     pourPath[index2] = temp;
   }
+  
+  private static void cullGroups(ArrayList<ProximityGroup> allGroups) {
+    Iterator iterator = allGroups.iterator();
+    while (iterator.hasNext())  {
+      ProximityGroup currentGroup = (ProximityGroup) iterator.next();
+      if (currentGroup.size < tolerance) allGroups.remove(currentGroup);
+    }
+  }
+      
 
 }
 
